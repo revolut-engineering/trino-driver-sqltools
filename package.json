@@ -1,0 +1,75 @@
+{
+  "name": "trino-driver-sqltools",
+  "displayName": "Trino Driver",
+  "description": "Trino Driver for SQLTools",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.73.1"
+  },
+  "publisher": "Revolut",
+  "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/revolut-engineering/trino-loadbalancer"
+  },
+  "bugs": {
+    "url": "https://github.com/revolut-engineering/trino-loadbalancer/issues"
+  },
+  "scripts": {
+    "clean": "rimraf -rf out *.vsix",
+    "esbuild:ext": "esbuild ./src/extension.ts --bundle --external:vscode --platform=node --tsconfig=./tsconfig.json --log-level=info --color=true --format=cjs --target=es2017 --minify --outfile=./out/extension.js",
+    "esbuild:ls": "esbuild ./src/ls/plugin.ts --bundle --external:vscode --platform=node --tsconfig=./tsconfig.json --log-level=info --color=true --format=cjs --target=es2017 --minify --outfile=./out/ls/plugin.js",
+    "esbuild": "yarn esbuild:ext && yarn esbuild:ls",
+    "copy": "cp package.json ./out/ls",
+    "prepackage": "yarn install && yarn clean && yarn esbuild && yarn copy",
+    "package": "vsce package --yarn --allow-star-activation",
+    "publish": "vsce publish --yarn --allow-star-activation",
+    "test-compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "keywords": [
+    "Trino",
+    "Trinodb",
+    "trino",
+    "trino-driver",
+    "trinodb",
+    "sqltools-driver"
+  ],
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Formatters",
+    "Other"
+  ],
+  "extensionDependencies": [
+    "mtxr.sqltools"
+  ],
+  "activationEvents": [
+    "*",
+    "onLanguage:sql",
+    "onCommand:sqltools.*"
+  ],
+  "main": "./out/extension.js",
+  "dependencies": {
+    "@sqltools/base-driver": "latest",
+    "@sqltools/types": "latest",
+    "axios": "1.2.1",
+    "uuid": "^9.0.0",
+    "yarn": "^1.22.19"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.20.2",
+    "@types/node": "^18.11.17",
+    "@types/vscode": "^1.42.0",
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "esbuild": "^0.16.16",
+    "eslint": "^8.31.0",
+    "eslint-config-prettier": "^8.6.0",
+    "prettier": "^2.8.2",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.9.4",
+    "vsce": "^2.15.0"
+  }
+}

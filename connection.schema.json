@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "server": {
+      "title": "Server",
+      "type": "string"
+    },
+    "port": {
+      "title": "Port",
+      "type": "string"
+    },
+    "catalog": {
+      "title": "Catalog",
+      "type": "string"
+    },
+    "schema": {
+      "title": "Schema",
+      "type": "string"
+    },
+    "username": {
+      "title": "User Name",
+      "type": "string"
+    },
+    "password": {
+      "title": "Password",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": ["server", "catalog", "user"]
+}
