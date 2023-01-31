@@ -20,10 +20,3 @@ jobs:
 
       - name: Bundle
         run: yarn run package
-
-      - name: Upload to Release
-        uses: OmgImAlexis/upload-to-release@12da88e9f14252a5232be13ee9aadda64637c271
-        with:
-          args: "*.vsix"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
