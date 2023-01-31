@@ -21,7 +21,9 @@ jobs:
       - name: Bundle
         run: yarn run package
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload to Release
+        uses: OmgImAlexis/upload-to-release
         with:
-          name: VSIX packages
-          path: ./*.vsix
+          args: "*.vsix"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
