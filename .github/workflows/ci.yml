@@ -20,3 +20,8 @@ jobs:
 
       - name: Bundle
         run: yarn run package
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: VSIX packages
+          path: ./*.vsix
