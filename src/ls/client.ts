@@ -1,8 +1,11 @@
 import axios, { AxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
+import * as https from 'https'
+import * as fs from 'fs';
 
 const DEFAULT_SERVER = 'http://localhost:8080';
 const DEFAULT_SOURCE = 'trino-js-client';
 const DEFAULT_USER = process.env.USER;
+const DEFAULT_VERIFY_SSL_CERT = true;
 
 // Trino headers
 const TRINO_HEADER_PREFIX = 'X-Trino-';
@@ -49,7 +52,8 @@ export type ConnectionOptions = {
     readonly auth?: Auth;
     readonly session?: Session;
     readonly extraCredential?: ExtraCredential;
-    readonly verify?: Boolean;
+    readonly verifySSLCert?: boolean;
+    readonly caChain?: string;
 };
 
 export type QueryStage = {
@@ -163,14 +167,9 @@ class Client {
     ) { }
 
     static create(options: ConnectionOptions): Client {
-        const https = require('https');
-        const agent = new https.Agent({
-            rejectUnauthorized: false
-        })
-
         const clientConfig: AxiosRequestConfig = {
             baseURL: options.server ?? DEFAULT_SERVER,
-            httpsAgent: agent,
+            httpsAgent: this.buildHttpsAgent(options),
         };
 
         const headers: RawAxiosRequestHeaders = {
@@ -198,6 +197,27 @@ class Client {
 
         return new Client(clientConfig, options);
     }
+
+
+    /**
+     * Method to build an https agent based on the configurations available
+     * @param options - ConnectionOptions
+     * @returns https.Agent
+     */
+    static buildHttpsAgent(options: ConnectionOptions): https.Agent {
+        const verifySSLCert = options.verifySSLCert ?? DEFAULT_VERIFY_SSL_CERT
+        if (!verifySSLCert) {
+            return new https.Agent({
+                rejectUnauthorized: false,
+            });
+        } else {
+            return new https.Agent({
+                rejectUnauthorized: true,
+                ca: fs.readFileSync(options.caChain)
+            });
+        }
+    }
+
 
     /**
      * Generic method to send a request to the server.
