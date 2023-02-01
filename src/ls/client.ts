@@ -198,7 +198,6 @@ class Client {
         return new Client(clientConfig, options);
     }
 
-
     /**
      * Method to build an https agent based on the configurations available
      * @param options - ConnectionOptions
@@ -217,7 +216,6 @@ class Client {
             });
         }
     }
-
 
     /**
      * Generic method to send a request to the server.
