@@ -6,6 +6,7 @@ const DEFAULT_SERVER = 'http://localhost:8080';
 const DEFAULT_SOURCE = 'trino-js-client';
 const DEFAULT_USER = process.env.USER;
 const DEFAULT_VERIFY_SSL_CERT = true;
+const DEFAULT_CA_CHAIN = "";
 
 // Trino headers
 const TRINO_HEADER_PREFIX = 'X-Trino-';
@@ -212,7 +213,7 @@ class Client {
         } else {
             return new https.Agent({
                 rejectUnauthorized: true,
-                ca: fs.readFileSync(options.caChain)
+                ca: fs.readFileSync(options.caChain ?? DEFAULT_CA_CHAIN)
             });
         }
     }
