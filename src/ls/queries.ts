@@ -1,13 +1,13 @@
-import { IBaseQueries, ContextValue } from "@sqltools/types";
+import { IBaseQueries, ContextValue, QueryBuilder, NSDatabase } from "@sqltools/types";
 import queryFactory from "@sqltools/base-driver/dist/lib/factory";
 
 /** write your queries here go fetch desired data. This queries are just examples copied from SQLite driver */
 
 const describeTable: IBaseQueries["describeTable"] = queryFactory`
-select * from ${(p) => p.database}.information_schema.columns
-where table_catalog = '${(p) => p.database}'
-  and table_schema  = '${(p) => p.schema}'
-  and table_name    = '${(p) => p.label}'
+SELECT * FROM ${(p) => p.database}.INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_CATALOG = '${(p) => p.database}'
+  AND TABLE_SCHEMA  = '${(p) => p.schema}'
+  AND TABLE_NAME    = '${(p) => p.label}'
 `;
 
 const fetchColumns: IBaseQueries["fetchColumns"] = queryFactory`
@@ -15,8 +15,8 @@ SELECT
   C.COLUMN_NAME AS label,
   C.TABLE_NAME AS "table",
   C.TABLE_SCHEMA AS schema,
-  c.table_catalog AS database,
-  C.data_type AS dataType,
+  C.TABLE_CATALOG AS database,
+  C.DATA_TYPE AS dataType,
   CAST(C.COLUMN_DEFAULT AS VARCHAR) AS defaultValue,
   CASE WHEN C.IS_NULLABLE = 'YES' THEN TRUE ELSE FALSE END AS isNullable,
   FALSE AS isPk,
@@ -64,20 +64,19 @@ const fetchViews: IBaseQueries["fetchTables"] = fetchTablesAndViews(
 );
 
 const searchTables: IBaseQueries["searchTables"] = queryFactory`
-SELECT TABLE_SCHEMA || '.' || TABLE_NAME AS label,
-       CASE WHEN TABLE_TYPE='BASE TABLE' THEN 'TABLE' ELSE 'VIEW' END AS type
+SELECT
+  TABLE_NAME AS label,
+  TABLE_SCHEMA AS schema,
+  CASE
+    WHEN TABLE_TYPE='BASE TABLE'
+    THEN 'TABLE'
+    ELSE 'VIEW'
+  END AS type
 FROM INFORMATION_SCHEMA.TABLES
-  ${(p) =>
-    p.search
-      ? `WHERE
-    (LOWER(TABLE_NAME) LIKE '%${p.search.toLowerCase()}%')
-    OR
-    ((LOWER(TABLE_SCHEMA) || '.' || LOWER(TABLE_NAME)) LIKE '%${p.search.toLowerCase()}%')
-    OR
-    ((LOWER(TABLE_CATALOG) || '.' || LOWER(TABLE_SCHEMA) || '.' || LOWER(TABLE_NAME)) LIKE '%${p.search.toLowerCase()}%')
-  `
-      : ""}
+WHERE TRUE
+${(p) => p.schema ? `AND lower(TABLE_SCHEMA) = '${p.schema.toLowerCase()}'` : ""}
 ORDER BY TABLE_NAME
+LIMIT 20
 `;
 
 const searchColumns: IBaseQueries["searchColumns"] = queryFactory`
@@ -89,33 +88,51 @@ SELECT C.COLUMN_NAME AS label,
        '${ContextValue.COLUMN}' as type
 FROM INFORMATION_SCHEMA.COLUMNS C
 WHERE 1 = 1
+AND LOWER(C.COLUMN_NAME) like '%${p => p.search.toLowerCase()}%'
 ${(p) =>
   p.tables.filter((t) => !!t.label).length
-    ? `AND LOWER(C.TABLE_NAME) IN (${p.tables
+    ? `AND LOWER(C.TABLE_SCHEMA) IN (${
+      p.tables
+        .filter((t) => !!t.database)
+        .map((t) => `'${t.database}'`.toLowerCase())
+        .join(", ")
+      })`
+    : ""
+}
+${(p) =>
+  p.tables.filter((t) => !!t.label).length
+    ? `AND LOWER(C.TABLE_NAME) IN (${
+      p.tables
         .filter((t) => !!t.label)
         .map((t) => `'${t.label}'`.toLowerCase())
-        .join(", ")})`
-    : ""}
-${(p) =>
-  p.search
-    ? `AND (
-    LOWER(C.TABLE_NAME || '.' || C.COLUMN_NAME) LIKE '%${p.search.toLowerCase()}%'
-    OR LOWER(C.COLUMN_NAME) LIKE '%${p.search.toLowerCase()}%'
-  )`
-    : ""}
+        .join(", ")
+      })`
+    : ""
+}
 ORDER BY C.COLUMN_NAME ASC, C.ORDINAL_POSITION ASC
-LIMIT ${(p) => p.limit || 100}
+LIMIT ${(p) => p.limit || 20}
 `;
 
 const fetchSchemas: IBaseQueries["fetchSchemas"] = queryFactory`
-select
-  schema_name AS label,
-  schema_name AS schema,
-  '${ContextValue.SCHEMA}' as type,
-  'group-by-ref-type' as iconId,
-  '${(p) => p.database}' as database
-from ${(p) => p.database}.information_schema.schemata
+SELECT
+  SCHEMA_NAME AS label,
+  SCHEMA_NAME AS schema,
+  '${ContextValue.SCHEMA}' AS type
+FROM INFORMATION_SCHEMA.SCHEMATA
+LIMIT 20
 `;
+
+const searchSchemas: QueryBuilder<{ search: string }, NSDatabase.ISchema> = queryFactory`
+SELECT
+  SCHEMA_NAME AS label,
+  SCHEMA_NAME AS schema,
+  '${ContextValue.SCHEMA}' AS type
+FROM
+  INFORMATION_SCHEMA.SCHEMATA
+WHERE
+  LOWER("schema_name") LIKE '%${p => p.search.toLowerCase()}%'
+LIMIT 20
+`
 
 export default {
   describeTable,
@@ -124,7 +141,8 @@ export default {
   fetchRecords,
   fetchTables,
   fetchViews,
+  fetchSchemas,
   searchTables,
   searchColumns,
-  fetchSchemas,
+  searchSchemas,
 };

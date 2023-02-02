@@ -171,9 +171,9 @@ export default class TrinoDriver
         ];
       case ContextValue.TABLE:
       case ContextValue.VIEW:
-        return this.queryResults(
-          queries.fetchColumns(item as NSDatabase.ITable)
-        );
+          return this.queryResults(
+            queries.fetchColumns(item as NSDatabase.ITable)
+          );
       case ContextValue.RESOURCE_GROUP:
         return this.getChildrenForGroup({ item, parent });
     }
@@ -185,8 +185,8 @@ export default class TrinoDriver
    * It gets the child based on child types
    */
   private async getChildrenForGroup({
-    parent,
     item,
+    parent,
   }: Arg0<IConnectionDriver["getChildrenForItem"]>) {
     switch (item.childType) {
       case ContextValue.TABLE:
@@ -210,13 +210,22 @@ export default class TrinoDriver
     _extraParams: any = {}
   ): Promise<NSDatabase.SearchableItem[]> {
     switch (itemType) {
+      case ContextValue.DATABASE:
+          const qry_db = this.queries.searchSchemas({ search });
+          return this.queryResults(qry_db);
       case ContextValue.TABLE:
       case ContextValue.VIEW:
-        return this.queryResults(queries.searchTables({ search }));
+          if (_extraParams.database) {
+            const qry_tb = this.queries.searchTables({ search, schema: _extraParams.database });
+            return this.queryResults(qry_tb);
+          }
       case ContextValue.COLUMN:
-        return this.queryResults(
-          queries.searchColumns({ search, ..._extraParams })
-        );
+        if (_extraParams.tables && _extraParams.tables.length > 0) {
+            const qry_cols = this.queries.searchColumns({ search, tables: _extraParams.tables || [] });
+            return this.queryResults(qry_cols);
+        } else {
+          return []
+        }
     }
     return [];
   }
