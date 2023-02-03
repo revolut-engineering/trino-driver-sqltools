@@ -2,7 +2,7 @@
   "name": "trino-driver-sqltools",
   "displayName": "Trino Driver",
   "description": "Trino Driver for SQLTools",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "engines": {
     "vscode": "^1.73.1"
   },
