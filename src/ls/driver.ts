@@ -149,11 +149,7 @@ export default class TrinoDriver
     switch (item.type) {
       case ContextValue.CONNECTION:
       case ContextValue.CONNECTED_CONNECTION:
-        return this.queryResults(
-          queries.fetchSchemas({
-            database: this.credentials.catalog,
-          } as NSDatabase.IDatabase)
-        );
+        return [];
       case ContextValue.SCHEMA:
         return <MConnectionExplorer.IChildItem[]>[
           {
@@ -171,35 +167,13 @@ export default class TrinoDriver
         ];
       case ContextValue.TABLE:
       case ContextValue.VIEW:
-          return this.queryResults(
-            queries.fetchColumns(item as NSDatabase.ITable)
-          );
+          return [];
       case ContextValue.RESOURCE_GROUP:
-        return this.getChildrenForGroup({ item, parent });
+        return [];
     }
     return [];
   }
 
-  /**
-   * This method is a helper to generate the connection explorer tree.
-   * It gets the child based on child types
-   */
-  private async getChildrenForGroup({
-    item,
-    parent,
-  }: Arg0<IConnectionDriver["getChildrenForItem"]>) {
-    switch (item.childType) {
-      case ContextValue.TABLE:
-        return this.queryResults(
-          queries.fetchTables(parent as NSDatabase.ISchema)
-        );
-      case ContextValue.VIEW:
-        return this.queryResults(
-          queries.fetchViews(parent as NSDatabase.ISchema)
-        );
-    }
-    return [];
-  }
 
   /**
    * This method is a helper for intellisense and quick picks.
@@ -209,24 +183,6 @@ export default class TrinoDriver
     search: string,
     _extraParams: any = {}
   ): Promise<NSDatabase.SearchableItem[]> {
-    switch (itemType) {
-      case ContextValue.DATABASE:
-          const qry_db = this.queries.searchSchemas({ search });
-          return this.queryResults(qry_db);
-      case ContextValue.TABLE:
-      case ContextValue.VIEW:
-          if (_extraParams.database) {
-            const qry_tb = this.queries.searchTables({ search, schema: _extraParams.database });
-            return this.queryResults(qry_tb);
-          }
-      case ContextValue.COLUMN:
-        if (_extraParams.tables && _extraParams.tables.length > 0) {
-            const qry_cols = this.queries.searchColumns({ search, tables: _extraParams.tables || [] });
-            return this.queryResults(qry_cols);
-        } else {
-          return []
-        }
-    }
     return [];
   }
 
